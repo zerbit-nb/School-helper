@@ -25,6 +25,10 @@
 
 6.双击logig.html文件，在登录窗口下面有初始密码，输入即可进入作品首页界面。
 
+
+
+
+
 # 🛠 AI 校园助手后端排查与维护指南
 
 本指南旨在帮助开发者快速定位并修复“AI校园助手”后端（Node.js）运行过程中可能出现的各种问题。
@@ -42,7 +46,7 @@
 
 ## 1. 启动与环境报错
 
-### 症状：`Error: listen EADDRINUSE: address already in use :::3000`
+### 问题：`Error: listen EADDRINUSE: address already in use :::3000`
 * **原因**：端口 3000 已被其他程序（如之前的调试进程或其他 Node 项目）占用。
 * **操作步骤**：
     * **方法 A（修改端口）**：在代码中将 `const PORT = 3000;` 改为 `3001`。
@@ -58,7 +62,7 @@
 
 ## 2. 文件系统报错
 
-### 症状：控制台显示 `暂时没翻到书，正常回答就好`
+### 问题：控制台显示 `暂时没翻到书，正常回答就好`
 * **原因**：程序无法在指定路径找到 `校规手册.txt`。
 * **检查清单**：
     1.  **目录结构**：确保主代码文件同级目录下有一个名为 `data` 的文件夹。
@@ -69,14 +73,14 @@
 
 ## 3. 讯飞星火 API 调用报错
 
-### 症状 A：返回 `401` 或鉴权失败
+### 问题 A：返回 `401` 或鉴权失败
 * **原因**：`API_KEY` 或 `API_SECRET` 填写错误，或账号余额不足。
 * **操作步骤**：
     1. 登录 [讯飞开放平台控制台](https://console.xfyun.cn/)。
     2. 重新核对并复制 `APIKey` 和 `APISecret`。
     3. 检查控制台的服务配额，确认 Spark 接口是否有剩余免费额度。
 
-### 症状 B：请求超时 (ETIMEDOUT)
+### 问题 B：请求超时 (ETIMEDOUT)
 * **原因**：服务器无法访问讯飞的 API 域名。
 * **操作步骤**：
     1. 检查网络连接是否正常。
@@ -86,13 +90,13 @@
 
 ## 4. 接口通信与跨域报错
 
-### 症状 A：浏览器报错 `Access-Control-Allow-Origin`
+### 问题 A：浏览器报错 `Access-Control-Allow-Origin`
 * **原因**：前端网页所在的域名与后端服务器不一致。
 * **操作步骤**：
     * 确保代码中存在 `res.setHeader('Access-Control-Allow-Origin', '*');`。
     * 如果前端需要发送自定义 Header，确保 `Access-Control-Allow-Headers` 中包含了这些字段。
 
-### 症状 B：`SyntaxError: Unexpected token in JSON at position 0`
+### 问题 B：`SyntaxError: Unexpected token in JSON at position 0`
 * **原因**：后端尝试解析空的请求体，或者前端发送的不是标准的 JSON 字符串。
 * **操作步骤**：
     1. 在 `let userRequest = JSON.parse(body);` 之前添加 `console.log("收到的原始数据:", body);`。
