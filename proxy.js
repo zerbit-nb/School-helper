@@ -8,8 +8,8 @@ const path = require('path');
 const PORT = 3000;
 
 
-const XUNFEI_API_KEY = 'c16d58dcd0122fc8ec3425ff28c529a8';
-const XUNFEI_API_SECRET = 'NzAwOTY1MDBlODY1ODc2ZDc1M2YyYmIz';
+const XUNFEI_API_KEY = '你的API_KEY';
+const XUNFEI_API_SECRET = '你的API_SECRET';
 
 const server = http.createServer((req, res) => {
    
