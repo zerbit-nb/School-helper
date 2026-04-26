@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI校园助手 - 后台管理面板</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui;}
+        body{
+            background: #f0f7ff;
+            background-image: 
+                linear-gradient(rgba(46, 125, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(46, 125, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            min-height: 100vh;
+        }
+        .nav{
+            background: #2196f3;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(33, 150, 243, 0.3);
+        }
+        .nav-title{
+            font-size: 22px;
+            font-weight: 600;
+        }
+        .nav-back{
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .container{
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .card{
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border-top: 3px solid #2196f3;
+        }
+        .card-title{
+            font-size: 20px;
+            font-weight: 600;
+            color: #0f4c81;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-title button{
+            background: rgba(244, 67, 54, 0.1);
+            color: #f44336;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .card-title button:hover{
+            background: rgba(244, 67, 54, 0.2);
+        }
+        table{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td{
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #f1f1f1;
+        }
+        th{
+            background: #e3f2fd;
+            color: #0f4c81;
+            font-weight: 600;
+        }
+        tr:hover{
+            background: #f8f9fa;
+        }
+        .empty-tip{
+            text-align: center;
+            padding: 30px;
+            color: #999;
+        }
+        .export-btn{
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        .export-btn:hover{
+            background: #388e3c;
+        }
+
+        /* 折叠展开按钮样式 */
+        .toggle-btn {
+            background: #e3f2fd;
+            color: #0d47a1;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 8px;
+        }
+        .toggle-btn:hover {
+            background: #bbdefb;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <div class="nav-back" onclick="location.href='index.html'">← 首页</div>
+        <div class="nav-title">后台管理面板</div>
+        <div></div>
+    </div>
+
+    <div class="container">
+        <!-- 课程表管理 -->
+        <div class="card">
+            <div class="card-title">
+                课程表管理
+                <div>
+                    <button onclick="clearSchedule()">清空课程表</button>
+                    <button class="export-btn" onclick="exportSchedule()">导出课程表</button>
+                    <button class="toggle-btn" onclick="toggleSchedule()">展开/折叠</button>
+                </div>
+            </div>
+            <div id="scheduleTableWrapper">
+                <table id="scheduleTable">
+                    <thead>
+                        <tr>
+                            <th>星期</th>
+                            <th>节次</th>
+                            <th>课程名称</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scheduleBody">
+                        <tr><td colspan="3" class="empty-tip">暂无课程数据</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 对话记录管理 -->
+        <div class="card">
+            <div class="card-title">
+                历史对话记录
+                <div>
+                    <button onclick="clearChat()">清空对话记录</button>
+                    <button class="export-btn" onclick="exportChat()">导出对话记录</button>
+                    <button class="toggle-btn" onclick="toggleChat()">展开/折叠</button>
+                </div>
+            </div>
+            <div id="chatTableWrapper">
+                <table id="chatTable">
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>用户问题</th>
+                            <th>AI回复</th>
+                        </tr>
+                    </thead>
+                    <tbody id="chatBody">
+                        <tr><td colspan="3" class="empty-tip">暂无对话记录</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 折叠状态控制
+        let scheduleExpand = false;
+        let chatExpand = false;
+        const SHOW_LIMIT = 5; // 默认只显示最近5条
+
+        // 加载课程表（支持折叠）
+        function loadSchedule() {
+            let list = JSON.parse(localStorage.getItem('schedule') || '[]');
+            let tbody = document.getElementById('scheduleBody');
+            
+            if (list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="empty-tip">暂无课程数据</td></tr>';
+                return;
+            }
+
+            // 折叠时只显示前N条
+            let showList = scheduleExpand ? list : list.slice(-SHOW_LIMIT);
+            let html = '';
+            showList.forEach(item => {
+                html += `<tr>
+                    <td>${item.day || '-'}</td>
+                    <td>${item.section || '-'}</td>
+                    <td>${item.name || '-'}</td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
+        // 加载对话记录（支持折叠）
+        function loadChat() {
+            let list = JSON.parse(localStorage.getItem('ai_history') || '[]');
+            let tbody = document.getElementById('chatBody');
+            
+            if (list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="empty-tip">暂无对话记录</td></tr>';
+                return;
+            }
+
+            let showList = chatExpand ? list : list.slice(-SHOW_LIMIT);
+            let html = '';
+            showList.forEach(item => {
+                html += `<tr>
+                    <td>${item.t || '-'}</td>
+                    <td>${item.q}</td>
+                    <td>${item.a}</td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
+        // 切换课程表展开/折叠
+        function toggleSchedule() {
+            scheduleExpand = !scheduleExpand;
+            loadSchedule();
+        }
+
+        // 切换对话展开/折叠
+        function toggleChat() {
+            chatExpand = !chatExpand;
+            loadChat();
+        }
+
+        // 清空功能
+        function clearSchedule() {
+            if (confirm('确定清空所有课程表？')) {
+                localStorage.removeItem('schedule');
+                loadSchedule();
+            }
+        }
+        function clearChat() {
+            if (confirm('确定清空所有对话记录？')) {
+                localStorage.removeItem('ai_history');
+                loadChat();
+            }
+        }
+
+        // 导出功能
+        function exportSchedule() {
+            let list = JSON.parse(localStorage.getItem('schedule') || '[]');
+            if (list.length === 0) { alert('暂无课程数据'); return; }
+            let content = "星期,节次,课程名称\n";
+            list.forEach(i => { content += `${i.day||'-'},${i.section||'-'},${i.name||'-'}\n`; });
+            let blob = new Blob([content], { type: 'text/csv;charset=utf-8' });
+            let a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = '课程表.csv';
+            a.click();
+        }
+
+        function exportChat() {
+            let list = JSON.parse(localStorage.getItem('ai_history') || '[]');
+            if (list.length === 0) { alert('暂无对话记录'); return; }
+            let content = "时间,用户问题,AI回复\n";
+            list.forEach(i => { content += `${i.t||'-'},${i.q},${i.a}\n`; });
+            let blob = new Blob([content], { type: 'text/csv;charset=utf-8' });
+            let a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = '对话记录.csv';
+            a.click();
+        }
+
+        window.onload = function () {
+            loadSchedule();
+            loadChat();
+        }
+    </script>
+</body>
+</html>

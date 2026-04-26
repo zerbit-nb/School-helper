@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI校园助手 - 课程表</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui;}
+        body{
+            background: #f0f7ff;
+            background-image: 
+                linear-gradient(rgba(46, 125, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(46, 125, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            min-height: 100vh;
+            padding-bottom: 30px;
+        }
+        .nav{
+            background: #2196f3;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(33, 150, 243, 0.3);
+        }
+        .nav-title{
+            font-size: 22px;
+            font-weight: 600;
+        }
+        .nav-back{
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .container{
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .card{
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border-top: 3px solid #2196f3;
+        }
+        .card-title{
+            font-size: 20px;
+            font-weight: 600;
+            color: #0f4c81;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        input{
+            width: 100%;
+            padding: 14px 18px;
+            margin-bottom: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            outline: none;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        input:focus{
+            border-color: #2196f3;
+            box-shadow: 0 0 8px rgba(33, 150, 243, 0.2);
+        }
+        .add-btn{
+            background: #2196f3;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+        .add-btn:hover{
+            background: #1976d2;
+            box-shadow: 0 0 10px rgba(33, 150, 243, 0.3);
+        }
+       
+        .import-btn{
+            background: #4caf50;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .import-btn:hover{
+            background: #388e3c;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+        }
+        
+        #fileInput{
+            display: none;
+        }
+   
+        .import-tip{
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            color: #999;
+        }
+     
+        .schedule-table{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            table-layout: fixed;
+        }
+      
+        .schedule-table th{
+            background: #2196f3;
+            color: white;
+            padding: 16px 10px;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 600;
+            border: 1px solid #e0e0e0;
+        }
+ 
+        .schedule-table .section-col{
+            background: #e3f2fd;
+            color: #0f4c81;
+            font-weight: 600;
+            text-align: center;
+            width: 80px;
+        }
+        
+        .schedule-table td{
+            padding: 8px 5px;
+            border: 1px solid #e0e0e0;
+            font-size: 14px;
+            color: #333;
+            vertical-align: top;
+            min-height: 60px;
+            background: white;
+            transition: all 0.2s ease;
+        }
+        .schedule-table td:hover{
+            background: #f8f9fa;
+        }
+
+        .course-card{
+            background: #bbdefb;
+            border-radius: 6px;
+            padding: 6px 4px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .course-card:hover{
+            background: #90caf9;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .course-name{
+            font-weight: 500;
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .course-time{
+            font-size: 12px;
+            color: #666;
+        }
+      
+        .course-del{
+            display: none;
+            font-size: 11px;
+            color: #f44336;
+            margin-top: 2px;
+            cursor: pointer;
+        }
+        .course-card:hover .course-del{
+            display: block;
+        }
+       
+        .empty-tip{
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+            font-size: 16px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-top: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .schedule-table{
+                font-size: 13px;
+            }
+            .schedule-table .section-col{
+                width: 60px;
+            }
+            .schedule-table th{
+                padding: 12px 5px;
+                font-size: 14px;
+            }
+            .course-name{
+                font-size: 12px;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="nav">
+        <div class="nav-back" onclick="location.href='index.html'">← 首页</div>
+        <div class="nav-title">课程表管理</div>
+        <div></div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-title">课程管理</div>
+            <input id="name" placeholder="课程名称（如：高等数学）">
+            <input id="day" placeholder="星期几（如：一、二、三...日）">
+            <input id="section" placeholder="节次（如：1、2、3...10）" type="number" min="1" max="10">
+            <input id="time" placeholder="具体时间（如：8:00-9:40）">
+            <button class="add-btn" onclick="addSchedule()">添加课程</button>
+            <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="importSchedule(event)">
+            <button class="import-btn" onclick="document.getElementById('fileInput').click()">📤 导入Excel课表</button>
+            <div class="import-tip">支持.xlsx/.xls格式，Excel需包含4列：课程名称、星期、节次（1-10）、具体时间（顺序一致）</div>
+        </div>
+
+        <div class="card-title">我的课表</div>
+        <div id="scheduleContainer">
+        </div>
+    </div>
+
+    <script>
+      
+        if(localStorage.getItem('isLogin') !== 'true'){
+            location.href = 'login.html';
+        }
+
+       
+        const dayMap = {'一':0, '二':1, '三':2, '四':3, '五':4, '六':5, '日':6};
+        
+        const dayReverseMap = ['一', '二', '三', '四', '五', '六', '日'];
+
+        
+        function initScheduleMatrix(){
+            const matrix = [];
+          
+            for(let i=0; i<10; i++){
+                matrix.push([]);
+                for(let j=0; j<7; j++){
+                    matrix[i].push([]); 
+                }
+            }
+            return matrix;
+        }
+
+      
+        function renderSchedule(){
+            const container = document.getElementById('scheduleContainer');
+            const savedSchedules = JSON.parse(localStorage.getItem('schedule')||'[]');
+            const matrix = initScheduleMatrix();
+            
+          
+            savedSchedules.forEach((course, courseIndex) => {
+                const dayIndex = dayMap[course.day];
+                const sectionIndex = course.section - 1;
+              
+                if(dayIndex === undefined || sectionIndex <0 || sectionIndex >9){
+                    return;
+                }
+                
+                matrix[sectionIndex][dayIndex].push({...course, index: courseIndex});
+            });
+            
+           
+            let tableHtml = `
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th class="section-col">节次</th>
+                            <th>周一</th>
+                            <th>周二</th>
+                            <th>周三</th>
+                            <th>周四</th>
+                            <th>周五</th>
+                            <th>周六</th>
+                            <th>周日</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+           
+            for(let section=0; section<10; section++){
+                tableHtml += `<tr><td class="section-col">${section+1}节</td>`;
+               
+                for(let day=0; day<7; day++){
+                    const courses = matrix[section][day];
+                    
+                    let cellContent = '';
+                    if(courses.length >0){
+                        courses.forEach(course => {
+                            cellContent += `
+                                <div class="course-card">
+                                    <div class="course-name">${course.name}</div>
+                                    <div class="course-time">${course.time}</div>
+                                    <div class="course-del" onclick="deleteSchedule(${course.index})">删除</div>
+                                </div>
+                            `;
+                        });
+                    }
+                    tableHtml += `<td>${cellContent}</td>`;
+                }
+                tableHtml += `</tr>`;
+            }
+            
+            tableHtml += `
+                    </tbody>
+                </table>
+            `;
+            
+           
+            const hasCourse = savedSchedules.length >0;
+            if(!hasCourse){
+                container.innerHTML = '<div class="empty-tip">暂无课程，点击上方添加或导入吧～</div>';
+            }else{
+                container.innerHTML = tableHtml;
+            }
+        }
+      
+        renderSchedule();
+
+      
+        function addSchedule(){
+            const name = document.getElementById('name').value.trim();
+            const day = document.getElementById('day').value.trim();
+            const section = parseInt(document.getElementById('section').value);
+            const time = document.getElementById('time').value.trim();
+            
+         
+            if(!name || !day || isNaN(section) || !time){
+                alert('请填写完整课程信息！');
+                return;
+            }
+            
+            // ========== 修复在这里 ==========
+            // 原来的错误：if(!dayMap[day]) 周一对应0，会被判定为false
+            if(dayMap[day] === undefined){
+                alert('星期格式错误！请输入一、二、三...日');
+                return;
+            }
+            
+            if(section <1 || section >10){
+                alert('节次错误！请输入1-10之间的数字');
+                return;
+            }
+            
+           
+            const schedules = JSON.parse(localStorage.getItem('schedule')||'[]');
+            
+            schedules.push({name, day, section, time});
+            
+            localStorage.setItem('schedule', JSON.stringify(schedules));
+            
+            document.getElementById('name').value = '';
+            document.getElementById('day').value = '';
+            document.getElementById('section').value = '';
+            document.getElementById('time').value = '';
+         
+            renderSchedule();
+            alert('课程添加成功！');
+        }
+
+       
+        function deleteSchedule(index){
+            const schedules = JSON.parse(localStorage.getItem('schedule')||'[]');
+            schedules.splice(index, 1);
+            localStorage.setItem('schedule', JSON.stringify(schedules));
+            renderSchedule();
+        }
+
+     
+        function importSchedule(event){
+            const file = event.target.files[0];
+            if(!file){
+                return;
+            }
+        
+            const fileType = file.name.split('.').pop().toLowerCase();
+            if(fileType !== 'xlsx' && fileType !== 'xls'){
+                alert('请选择正确的Excel文件（.xlsx或.xls格式）！');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e){
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                   
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                   
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: ['name', 'day', 'section', 'time'], skipHeader: true });
+                 
+                    const validData = jsonData.filter(item => {
+                        const dayValid = dayMap[item.day] !== undefined;
+                        const sectionValid = !isNaN(item.section) && item.section >0 && item.section <=10;
+                        return item.name && dayValid && sectionValid && item.time;
+                    });
+                    if(validData.length === 0){
+                        alert('Excel文件数据格式错误！请确保包含4列：课程名称、星期（一至日）、节次（1-10）、具体时间，且无空值。');
+                        return;
+                    }
+                
+                    const formatData = validData.map(item => ({
+                        ...item,
+                        section: parseInt(item.section)
+                    }));
+               
+                    const oldSchedules = JSON.parse(localStorage.getItem('schedule')||'[]');
+                 
+                    const newSchedules = [...formatData, ...oldSchedules].filter((item, index, self) => {
+                        return self.findIndex(t => t.name === item.name && t.day === item.day && t.section === item.section) === index;
+                    });
+                 
+                    localStorage.setItem('schedule', JSON.stringify(newSchedules));
+                  
+                    renderSchedule();
+                    alert(`课表导入成功！共导入${validData.length}门课程（已自动去重）`);
+              
+                    document.getElementById('fileInput').value = '';
+                } catch (error) {
+                    alert('课表导入失败，请检查文件是否损坏或格式正确！');
+                    console.log('导入错误：', error);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+    </script>
+</body>
+</html>

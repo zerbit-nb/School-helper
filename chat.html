@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI校园助手</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --blue: #2196f3;
+            --blue-light: #e3f2fd;
+            --blue-mid: #90caf9;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --bg: #f0f7ff;
+            --white: #ffffff;
+            --radius: 14px;
+            --radius-sm: 8px;
+            --shadow: 0 4px 12px rgba(0,0,0,0.05);
+            --shadow-hover: 0 8px 20px rgba(0,0,0,0.07);
+            --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: var(--text);
+            overflow: hidden;
+        }
+
+        .nav {
+            height: 60px;
+            background: var(--blue);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 0 26px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 10px rgba(33,150,243,0.2);
+            z-index: 10;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 17px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .nav-brand .icon {
+            width: 34px;
+            height: 34px;
+            background: rgba(255,255,255,0.2);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        .nav-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.85);
+            margin-left: auto;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 6px rgba(34,197,94,0.4);
+        }
+
+        .status-dot.error { background: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,0.4); }
+
+        .back-btn {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: none;
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .back-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        .layout {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 270px;
+            background: var(--white);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-head {
+            padding: 18px 20px 14px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-head span {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-clear {
+            font-size: 12px;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px 9px;
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+        }
+
+        .btn-clear:hover {
+            background: var(--bg);
+            color: var(--text);
+            transform: translateY(-1px);
+        }
+
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .history-item {
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: var(--transition);
+            margin-bottom: 3px;
+            border: 1px solid transparent;
+        }
+
+        .history-item:hover {
+            background: var(--bg);
+            color: var(--text);
+            border-color: var(--border);
+            transform: translateX(2px);
+        }
+        .history-item.active {
+            background: var(--blue-light);
+            color: var(--blue);
+            font-weight: 500;
+            border-color: var(--blue-mid);
+        }
+
+        .history-empty {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .chat-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px 12%;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+            background: var(--bg);
+        }
+
+        /* 滚动条美化 */
+        .chat-body::-webkit-scrollbar {
+            width: 5px;
+        }
+        .chat-body::-webkit-scrollbar-thumb {
+            background: var(--blue-mid);
+            border-radius: 10px;
+        }
+
+        .welcome {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            text-align: center;
+            padding-bottom: 60px;
+        }
+
+        .welcome-icon {
+            width: 72px;
+            height: 72px;
+            background: var(--blue-light);
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 34px;
+            color: var(--blue);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+        .welcome-icon:hover {
+            transform: scale(1.03);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .welcome h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #0f4c81;
+        }
+
+        .welcome p {
+            font-size: 14px;
+            color: var(--text-muted);
+            max-width: 400px;
+            line-height: 1.75;
+        }
+
+        .quick-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .quick-btn {
+            padding: 10px 18px;
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            font-size: 13px;
+            color: var(--text);
+            background: var(--white);
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+
+        .quick-btn:hover {
+            border-color: var(--blue);
+            color: var(--blue);
+            background: var(--blue-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(33,150,243,0.12);
+        }
+
+        .msg {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            animation: msgFade 0.3s ease forwards;
+        }
+
+        @keyframes msgFade {
+            from { opacity:0; transform: translateY(8px); }
+            to { opacity:1; transform: translateY(0); }
+        }
+
+        .msg.user { flex-direction: row-reverse; }
+
+        .msg-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            flex-shrink: 0;
+            box-shadow: var(--shadow);
+        }
+
+        .msg.ai .msg-avatar {
+            background: var(--blue);
+            color: white;
+            font-size: 12px;
+        }
+        .msg.user .msg-avatar {
+            background: var(--blue-light);
+            color: var(--blue);
+        }
+
+        .msg-bubble {
+            max-width: 70%;
+            padding: 14px 18px;
+            border-radius: var(--radius);
+            font-size: 15px;
+            line-height: 1.75;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            word-break: break-word;
+        }
+
+        .msg.ai .msg-bubble {
+            background: var(--white);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-top-left-radius: 5px;
+        }
+        .msg.ai .msg-bubble:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .msg.user .msg-bubble {
+            background: var(--blue);
+            color: white;
+            border-top-right-radius: 5px;
+        }
+
+        .typing {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            padding: 6px 0;
+        }
+
+        .typing span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--blue-mid);
+            animation: bounce 1.2s infinite ease-in-out;
+        }
+
+        .typing span:nth-child(2) { animation-delay: 0.2s; }
+        .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        .input-zone {
+            padding: 20px 12%;
+            background: var(--white);
+            border-top: 1px solid var(--border);
+            box-shadow: 0 -1px 6px rgba(0,0,0,0.02);
+        }
+
+        .input-box {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            background: #fafbfc;
+            border: 1.5px solid var(--border);
+            border-radius: 16px;
+            padding: 12px 16px;
+            transition: var(--transition);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+
+        .input-box:focus-within {
+            border-color: var(--blue);
+            background: var(--white);
+            box-shadow: 0 0 0 4px rgba(33,150,243,0.08);
+        }
+
+        .chat-input {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            resize: none;
+            font-size: 15px;
+            font-family: inherit;
+            color: var(--text);
+            line-height: 1.6;
+            max-height: 130px;
+            min-height: 24px;
+            overflow-y: auto;
+        }
+
+        .chat-input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
+
+        .send-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: var(--blue);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: var(--transition);
+            box-shadow: 0 2px 8px rgba(33,150,243,0.25);
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: #1976d2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(33,150,243,0.3);
+        }
+        .send-btn:disabled {
+            background: var(--blue-mid);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .send-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: white;
+        }
+
+        .input-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 10px;
+            text-align: center;
+            opacity: 0.7;
+        }
+
+        /* 错误提示条 */
+        .error-bar {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            font-size: 13px;
+            padding: 12px 18px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 14px;
+            display: none;
+            box-shadow: var(--shadow);
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .chat-body { padding: 24px 16px; }
+            .input-zone { padding: 16px; }
+            .msg-bubble { max-width: 85%; }
+            .nav { padding: 0 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="nav">
+    <!-- 返回首页 ← 现在在最左侧 -->
+    <button class="back-btn" onclick="location.href='index.html'">← 返回首页</button>
+
+    <div class="nav-brand">
+        <div class="icon">🎓</div>
+        AI校园助手
+    </div>
+
+    <div class="nav-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">连接中...</span>
+    </div>
+</nav>
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-head">
+            <span>历史对话</span>
+            <button class="btn-clear" onclick="clearAll()">清空</button>
+        </div>
+        <div class="history-list" id="historyList">
+            <div class="history-empty">暂无历史对话</div>
+        </div>
+    </aside>
+
+    <div class="chat-wrap">
+        <div class="chat-body" id="chatBody">
+            <div class="welcome" id="welcome">
+                <div class="welcome-icon">🤖</div>
+                <h2>你好，我是AI校园助手</h2>
+                <p>基于讯飞星火大模型，为你解答校园生活、学习和日常问题。试着问我任何问题吧！</p>
+                <div class="quick-btns">
+                    <button class="quick-btn" onclick="quickAsk('如何在教务系统查询成绩？')">📊 如何查询成绩</button>
+                    <button class="quick-btn" onclick="quickAsk('请假流程是什么？')">📋 请假流程</button>
+                    <button class="quick-btn" onclick="quickAsk('图书馆开放时间是几点？')">📚 图书馆时间</button>
+                    <button class="quick-btn" onclick="quickAsk('宿舍上网怎么连接？')">📶 宿舍上网</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-zone">
+            <div class="error-bar" id="errorBar"></div>
+            <div class="input-box">
+                <textarea
+                    class="chat-input"
+                    id="chatInput"
+                    placeholder="输入你的问题，按 Enter 发送..."
+                    rows="1"
+                    oninput="onInput(this)"
+                    onkeydown="onKey(event)"
+                ></textarea>
+                <button class="send-btn" id="sendBtn" disabled onclick="send()">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="input-hint">Enter 发送 · Shift+Enter 换行</div>
+        </div>
+    </div>
+</div>
+
+<script>
+const CFG = {
+    apiKey:    'c16d58dcd0122fc8ec3425ff28c529a8',
+    apiSecret: 'NzAwOTY1MDBlODY1ODc2ZDc1M2YyYmIz',
+    model:     'generalv3.5',
+    proxyUrl:  'http://localhost:3000/xunfei/chat'
+};
+
+let history = JSON.parse(localStorage.getItem('ai_history') || '[]');
+let busy = false;
+
+window.onload = () => {
+    renderHistory();
+    checkConnection();
+};
+
+function checkConnection() {
+    fetch(CFG.proxyUrl, { method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ model: CFG.model, messages: [{role:'user',content:'ping'}], max_tokens: 5 })
+    })
+    .then(() => setStatus(true))
+    .catch(() => setStatus(false));
+}
+
+function setStatus(ok) {
+    document.getElementById('statusDot').className = 'status-dot' + (ok ? '' : ' error');
+    document.getElementById('statusText').textContent = ok ? '已连接' : '代理未启动';
+}
+
+function onInput(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+    document.getElementById('sendBtn').disabled = !el.value.trim() || busy;
+}
+
+function onKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (!document.getElementById('sendBtn').disabled) send();
+    }
+}
+
+function quickAsk(q) {
+    document.getElementById('chatInput').value = q;
+    onInput(document.getElementById('chatInput'));
+    send();
+}
+
+function send() {
+    const input = document.getElementById('chatInput');
+    const q = input.value.trim();
+    if (!q || busy) return;
+
+    hideError();
+    hideWelcome();
+    busy = true;
+    input.value = '';
+    onInput(input);
+    document.getElementById('sendBtn').disabled = true;
+
+    appendMsg('user', q);
+    const loadId = 'load_' + Date.now();
+    appendLoading(loadId);
+
+    fetch(CFG.proxyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            model: CFG.model,
+            messages: [
+                { role: 'system', content: '你是AI校园助手，专门解答校园相关问题，包括学习、成绩查询、课表、请假、食堂、图书馆、宿舍、社团等。回复简洁清晰，贴合校园实际，不要提供无关内容。' },
+                { role: 'user', content: q }
+            ],
+            max_tokens: 2048,
+            stream: false
+        })
+    })
+    .then(r => {
+        if (!r.ok) return r.text().then(t => { throw new Error('HTTP ' + r.status + ': ' + t); });
+        return r.json();
+    })
+    .then(data => {
+        removeElement(loadId);
+        let answer = '';
+        if (data.choices && data.choices[0]) {
+            answer = data.choices[0].message.content;
+        } else if (data.code && data.code !== 0) {
+            answer = '接口返回错误（code=' + data.code + '）：' + (data.message || '未知错误');
+        } else {
+            answer = '收到了回复，但格式有点奇怪，请检查控制台日志。';
+            console.log('原始返回：', data);
+        }
+        appendMsg('ai', answer);
+        saveHistory(q, answer);
+        setStatus(true);
+    })
+    .catch(err => {
+        removeElement(loadId);
+        setStatus(false);
+        let tip = '';
+        if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+            tip = '❌ 无法连接代理服务器。请先在终端运行：node proxy.js，再刷新页面。';
+        } else {
+            tip = '❌ 请求失败：' + err.message;
+        }
+        showError(tip);
+        appendMsg('ai', tip);
+        console.error(err);
+    })
+    .finally(() => {
+        busy = false;
+        document.getElementById('sendBtn').disabled = false;
+    });
+}
+
+function hideWelcome() {
+    const w = document.getElementById('welcome');
+    if (w) w.style.display = 'none';
+}
+
+function appendMsg(role, text) {
+    const body = document.getElementById('chatBody');
+    const div = document.createElement('div');
+    div.className = 'msg ' + role;
+    div.innerHTML = `
+        <div class="msg-avatar">${role === 'ai' ? 'AI' : '我'}</div>
+        <div class="msg-bubble">${escHtml(text)}</div>
+    `;
+    body.appendChild(div);
+    body.scrollTop = body.scrollHeight;
+}
+
+function appendLoading(id) {
+    const body = document.getElementById('chatBody');
+    const div = document.createElement('div');
+    div.className = 'msg ai';
+    div.id = id;
+    div.innerHTML = `
+        <div class="msg-avatar">AI</div>
+        <div class="msg-bubble">
+            <div class="typing"><span></span><span></span><span></span></div>
+        </div>
+    `;
+    body.appendChild(div);
+    body.scrollTop = body.scrollHeight;
+}
+
+function removeElement(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+}
+
+function showError(msg) {
+    const bar = document.getElementById('errorBar');
+    bar.textContent = msg;
+    bar.style.display = 'block';
+}
+
+function hideError() {
+    document.getElementById('errorBar').style.display = 'none';
+}
+
+function escHtml(s) {
+    return String(s)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/\n/g,'<br>');
+}
+
+
+function saveHistory(q, a) {
+    history.unshift({ id: Date.now(), q, a, t: new Date().toLocaleString() });
+    if (history.length > 30) history.pop();
+    localStorage.setItem('ai_history', JSON.stringify(history));
+    renderHistory();
+}
+
+function renderHistory() {
+    const list = document.getElementById('historyList');
+    if (!history.length) {
+        list.innerHTML = '<div class="history-empty">暂无历史对话</div>';
+        return;
+    }
+    list.innerHTML = history.map(item => `
+        <div class="history-item" onclick="loadHistory(${item.id})">
+            ${escHtml(item.q)}
+        </div>
+    `).join('');
+}
+
+function loadHistory(id) {
+    const item = history.find(h => h.id === id);
+    if (!item) return;
+
+    const body = document.getElementById('chatBody');
+    hideWelcome();
+    body.innerHTML = `
+        <div class="msg user">
+            <div class="msg-avatar">我</div>
+            <div class="msg-bubble">${escHtml(item.q)}</div>
+        </div>
+        <div class="msg ai">
+            <div class="msg-avatar">AI</div>
+            <div class="msg-bubble">${escHtml(item.a)}</div>
+        </div>
+    `;
+    body.scrollTop = body.scrollHeight;
+
+    document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+}
+
+function clearAll() {
+    if (!confirm('确定清空所有历史对话？')) return;
+    history = [];
+    localStorage.removeItem('ai_history');
+    renderHistory();
+
+    const body = document.getElementById('chatBody');
+    body.innerHTML = `
+        <div class="welcome" id="welcome">
+            <div class="welcome-icon">🤖</div>
+            <h2>你好，我是AI校园助手</h2>
+            <p>基于讯飞星火大模型，为你解答校园生活、学习和日常问题。试着问我任何问题吧！</p>
+            <div class="quick-btns">
+                <button class="quick-btn" onclick="quickAsk('如何在教务系统查询成绩？')">📊 如何查询成绩</button>
+                <button class="quick-btn" onclick="quickAsk('请假流程是什么？')">📋 请假流程</button>
+                <button class="quick-btn" onclick="quickAsk('图书馆开放时间是几点？')">📚 图书馆时间</button>
+                <button class="quick-btn" onclick="quickAsk('宿舍上网怎么连接？')">📶 宿舍上网</button>
+            </div>
+        </div>
+    `;
+}
+</script>
+</body>
+</html>
